@@ -1,0 +1,500 @@
+movie rating practice.
+	-First access the data by- pd.read_csv(r'...../name.csv')
+	-Load data by head() or tail()
+	-column names- movie.columns
+	* Slicing
+	-movies[['title','genres']].head() #more than one column slicing with row slicing.
+	-.iloc[row1:row2,column1:column2] or iloc[:,[0,5,9]]-->all rows, 0,5,9 index columns(specific columns). #column slicing.
+	-.loc[row1:row2] --> row slicing--> .iloc[1:3] --> df[1:3]
+	-.loc[[0,4,9]]   ---> give specific rows.same for iloc[[]]
+	-clean_data[0:6:2] --> 0 to 5 index rows with step 2 ie 0, 2, 4 rows.
+
+	-Check if names of attributes are correct, readable for all.
+		-changing the columns name:
+			-(i) movie = movie.set_axis(labels=['Film', 'Genre', 'CriticsRating', 'AudienceRatings','BudgetMillion', \
+                               'Year of release'],axis=1)
+			-(ii) movie.rename(columns={'Rotten Tomatoes Ratings %' : 'CriticsRating', 'Audience Ratings %' : 'AudienceRatings'},inplace=True)
+			-(iii) movie.columns=['Film', 'Genre', 'CriticsRating', 'AudienceRatings', 'BudgetMillion','Year']
+	-Remove columns.
+		-health = health.drop(columns=health.columns[[14, 15, 16]])  # Dropping by index
+		-health = health.drop(columns=[14, 15, 16])  # Only works if 14, 15, 16 are column names.
+		-If you want to modify the DataFrame without reassigning, use:
+			-health.drop(columns=health.columns[[14, 15, 16]], inplace=True)
+			-health.drop(columns=health.columns[[-1]]) -- it will remove last column but dataframe will not change.
+		-iloc[:,[0,5,9]]-->all rows, 0,5,9 index columns(specific columns).
+		-delete a column: # Dropping by name
+        	i) rating_1 = rating.drop('timestamp',axis=1)
+        	ii) del tag['timestamp']
+        	iii) tag = tag.dropna()  #remove all rows having na or empty value.
+
+	-storing column names
+            column_0 = tag.columns[0]
+    	-extract or store a specific column
+            column0 = tag['userId']
+
+	-Filter
+        filter1 = rating_1['rating'] > 10
+        print(filter1) #print in false or true
+        filter1.any() #give True if at least one value is >10
+        filter2.all()  #all true then true.
+
+	-#slicing by filter and row
+        is_highly_rated = rating_1['rating'] >= 5.0
+        rating_1[is_highly_rated][30:50]
+
+	-#is_action is a dataframe not series. Gives list of movies having a word 'Action'
+        is_action = movies['genres'].str.contains('Action')  #filtering as per a specific key word.
+        movies[is_action][5:7]
+
+	-#count of occurance of a specific key word.
+	-I want to find how many movies contain 'action' word and how any don't.
+            is_action_count_count = movies[['genres']].groupby(is_action).count()
+	
+	- rating.sort_values(by="rating") #rating column will be rearranged in asending order so as the data frame
+	-df.sort_values(by=['Age', 'Salary'], ascending=[True, False]) --> we can add more attributes.
+
+-data cleaning & pre-processing:(remove functon is missing)
+
+	-replace: movie.columns=movie.columns.str.replace(" ", "_")--->Year of release---->Year_of_release
+	-movie.info() --- data type and memory used.
+	-movie.dtype -- for streamlit.
+	-data.shape --- (row, column)
+	
+	-If rows include unwanted charecters.
+	-Data clean:
+	-emp['Name'] = emp['Name'].str.replace(r'\W','',regex=True) - replace any special charecter to nothing
+	-emp['Age'] = emp['Age'].str.extract('(\d+)') - It will extract numbers only, in continuation.
+	
+	-If attributes have null values.(EDA)
+		-movie.isnull().any().any() #no null values in entire table
+		-movie.isnull().sum() #imporant to know number of null valus per attributes.(check)
+		-clean_data['Location'] = clean_data['Location'].fillna(clean_data['Location'].mode()[0]) - for categorical data
+		-clean_data['Exp'] = clean_data['Exp'].fillna(np.mean(pd.to_numeric(clean_data['Exp']))) - for numerical data
+	-#variable creation. (0 or 1)
+		imputation = pd.get_dummies(clean_data,dtype=int) #for dtype=int we get class variable as 0 or 1 else true or false.
+
+	-You want to remove special charecters or any type of data from a column but want to store it in a different column rather than deleting it.
+		-import re
+		# Function to extract special characters
+		def extract_special_chars(name):
+    			return ''.join(re.findall(r'\W', str(name)))  # Extracts all non-word characters
+		# Create a new column for special characters
+		emp1["Special_Chars"] = emp1["Name"].apply(extract_special_chars) --> apply function apply a method or funtion to all rows of column or all rows of all columns.
+
+		-#I want to remove special char from name column & place the Special_chars column just adjacent to Name column
+		# Remove special characters from the "Name" column
+		emp1["Name"] = emp1["Name"].str.replace(r'\W', '', regex=True)
+	-Reorder columns to place "Special_Chars" after "Name"
+		column_order = ["Name", "Special_Chars"] + [col for col in emp1.columns if col not in ["Name", "Special_Chars"]]
+		emp1 = emp1[column_order]
+		emp1.head()
+
+	-changing data type in one go.
+		-using loop and condition to change the dtype of attributes.
+		for col in movie.columns:
+    			if movie[col].dtype == 'object':
+        			movie[col] = movie[col].astype('category')
+		-In oneline
+			 -movie = movie.apply(lambda col: col.astype('object') if col.dtype == 'category' else col)
+	-for only one column.
+		-movie['Year']=movie['Year'].astype('category')
+		-movies.Film = movies.Film.astype('category')
+
+	-Statistical report- movie.describe().T
+
+-Unique values
+
+	1. How many unique values for a column
+		-movie.Genre.nunique()
+		-health['cp'].nunique()
+	2. What are the uniques values in a column.
+		-movie.Year.cat.categories  #for loop specially.
+		-movie.Genre.unique()
+		-health['age'].unique()
+	3. How many unique values in each columns.
+		-health.nunique()
+
+	4. What are the unique values of each columns.
+		-health.apply(pd.unique)
+		-unique_values = {col: health[col].unique() for col in health.columns}  #datframe to dictory
+		for col, values in unique_values.items():
+    			print(f"Unique values in '{col}': {values}")
+	5. what is the count of each unqiue value in a column or each column.
+		-index, counts = np.unique(rating['rating'].values,return_counts=True) #gives no of repeation of each unique value of ratigs.Like no of time 1 is repeated.
+		df = pd.DataFrame({
+		    'rating': index,
+		    'count': counts
+		})
+		print(df)
+		-If you want to get unique values along with their counts of each columns, use:
+		for col in health.columns:
+    			print(f"Column: {col}")
+    			print(health[col].value_counts())
+    			print("-" * 30)
+
+		-rating_1.groupby('rating').count() -- The item ie rating values will arranged in desending order.
+		-health['cp'].value_counts() or health.cp.value_counts() -- The counts will be in desending order.
+		-rating_1[['movieId','rating']].groupby('movieId').count() -- count each movie getting how many ratings with column slicing. == rating_1['movieId'].value_counts()
+        	-average_rating = rating_1[['movieId','rating']].groupby('movieId').mean() -- count() --> then gives count.	
+
+	6. What is the count of the uniques values of a column's unique vaues for other column's or columns' unqie value.
+		-health.groupby('sex')['target'].value_counts()  #gives no of repeation of uniques values of 'target' for each 'sex'
+		-health.groupby(['fbs','sex','cp'])['target'].value_counts() #gives no of repeation of uniques values of 'target' for each 'fbs','sex','cp'.
+
+		-health.groupby('sex')['target'].value_counts(normalize=True) -- gives fraction of repeation of uniques values of 'target' for each 'sex'.
+		-health.groupby('sex')['target'].value_counts(normalize=True).mul(100) -- multiply with 100 gives % value rather total count.
+
+		-health.unique() -- Gives error. so use below code.
+		-health.value_counts() -- then it gives the no of combination of each attributes. It must be used for a column.
+		* count the occurrences of each unique value in the health column (or Series). 
+			It returns a sorted Series with unique values as the index and their respective counts as values. 
+
+	* .value_counts() arrange as per no of occurance and groupby() arrange in asending order of item ie here rating's value.
+		-s.value_counts()	Counts unique values in a Series
+		df['col'].value_counts() -- Counts unique values in a specific column of a DataFrame.
+		s.value_counts(ascending=True) -- Sorts the counts in ascending order.
+		s.value_counts(dropna=False) -- Includes NaN values in the count.
+		s.value_counts(normalize=True) -- Returns relative frequencies instead of counts.
+		s.value_counts(bins=3) -- Groups numerical values into 3 bins.
+		df.value_counts() -- Counts unique row combinations in a DataFrame.
+
+	-mapping in groupby() & value_count(). By doing this sex instead of 0 or 1 it will display as male or female.
+		target_label = {0 : 'No Heart Disease', 1 : 'Heart Disease'}
+		sex_label = {0 : 'Female', 1 : 'Male'}
+		# Create mapped columns (without modifying original data)
+		health['sex_mapped'] = health['sex'].map(sex_label)
+		health['target_mapped'] = health['target'].map(target_label)
+		# Now group by mapped columns
+		result = health.groupby('sex_mapped')['target_mapped'].value_counts()
+		print(result)
+
+		-health.groupby(health['sex'].map(sex_label))['target'].value_counts() -- one line mapping, but [] mapping can not be done here. For this use above step.
+
+	-clean_data.to_csv('clean_data.csv')  #save file
+		-import os
+		-os.getcwd()  #location of saved file.
+
+	
+-visualization============================================================================================
+	[import matplotlib.pyplot as plt
+	import seaborn as sns
+
+	%matplotlib inline
+
+	import warnings
+	warnings.filterwarnings('ignore')
+
+	# Set figure size initially. 10 inches width and 6 inches height
+	# plt.figure(figsize=(5, 4)) #After this, any plot (Seaborn or Matplotlib) will automatically use this figure size.
+
+	# Set figure size initially using seaborn
+	sns.set(rc={'figure.figsize': (6, 4)})  #This sets the default figure size for all future plots in your notebook.
+	sns.set(style="whitegrid")]
+	sns.set(style='white',rc={'axes.facecolor':'black'}) #change the backgroud color to black.
+--------------------------------------------------------------------------------------------------------------------------------
+
+	-Object Oriented API fig and ax object is simillar to gcf() and gca() of pyplot
+	
+	-sns
+		jointplot : Draw multiple bivariate plots with univariate marginal distributions. Two numerical data comparision.
+			plt.figure(figsize=(10,5)) #to define the size of the whole figure if subplots then including all sublots
+		vis1 = sns.jointplot(data=movie, x='CriticsRating', y='AudienceRatings',kind="reg",height=4,ratio=4, label=movie.Genre.cat.categories)
+    			# Height of the figure (in inches). total height
+             		# Ratio of joint plot to marginal plots (height)
+    			# Now control everything with plt.gcf()
+		-All these control valid for any graph without fig, ax object. ie pyplot API
+    			# plt.gcf().set_size_inches(5, 3)
+			plt.suptitle("Critics Rating vs Audience Rating", fontsize=10)
+			plt.xticks(fontsize=10, rotation=45, color='darkblue')
+  			plt.yticks(fontsize=10, color='darkgreen')
+			vis1.set_axis_labels(xlabel="Critics Rating (%)", ylabel="Audience Rating (%)", fontsize=12, fontweight='bold')
+			plt.xlabel("Critics Rating (%)", fontsize=12, color='darkblue')
+			plt.ylabel("Audience Rating (%)", fontsize=12, color='darkgreen')
+			vis1.ax_joint.set_facecolor('#f5f5f5')   #To add a background color
+			plt.legend()  #should also include label in plot arguments
+			plt.tight_layout()
+			plt.show()
+		- 
+
+
+		-subplots with Object Oriented API (boxplot here)
+		color_dict = {
+       			 'Action': 'skyblue',
+        		'Drama': 'lightcoral',
+        		'Comedy': 'lightgreen',
+        		'Thriller': 'orange',
+        		'Horror': 'purple',
+        		'Romance': 'red',
+        		'Adventure': 'gold'}   			
+    		fig, ax = plt.subplots(1,2,figsize=(14,6))
+    		sns.boxplot(data=movie, x='Genre',y='CriticsRating', palette=color_dict, ax = ax[0])
+    		#Modifying the shape & size of x,y label and title & ticks.
+    		ax[0].set_xlabel('Genre', fontweight='bold', fontsize=20, fontfamily='serif', color='black')
+    		ax[0].set_ylabel('Critics Rating', fontweight='bold', fontsize=20, fontfamily='serif', color='black')
+    		ax[0].set_xticklabels(ax[0].get_xticklabels(), fontweight='bold', fontsize=10)
+    		ax[0].set_yticklabels(ax[0].get_yticklabels(),fontweight='bold', fontsize=10)
+
+    		sns.boxplot(data=movie, x='Genre',y='AudienceRatings',palette=color_dict, ax = ax[1])
+    		#Modifying the shape & size of x,y label and title & ticks.
+    		ax[1].set_xlabel('Genre', fontweight='bold', fontsize=20, fontfamily='serif', color='black')
+    		ax[1].set_ylabel('Audience Rating', fontweight='bold', fontsize=20, fontfamily='serif', color='black')
+    		ax[1].set_xticklabels(ax[1].get_xticklabels(),fontweight='bold', fontsize=10)
+    		ax[1].set_yticklabels(ax[1].get_yticklabels(),fontweight='bold', fontsize=10)
+    		plt.show()
+
+		# for simple OO API plot. 
+		f, ax = plt.subplots(figsize=(8, 6))
+		ax = sns.countplot(x="sex", hue="target", data=df)
+		plt.show()
+---------------------------------------------
+		-countplot, You want to display the the numbers on the bar also.
+
+		-mapping in groupby() & value_count(). By doing this sex instead of 0 or 1 it will display as male or female.
+		target_label = {0 : 'No Heart Disease', 1 : 'Heart Disease'}
+		sex_label = {0 : 'Female', 1 : 'Male'}
+		# Create mapped columns (without modifying original data)
+		health['sex_mapped'] = health['sex'].map(sex_label)
+		health['target_mapped'] = health['target'].map(target_label)
+		# Now group by mapped columns
+		result = health.groupby('sex_mapped')['target_mapped'].value_counts()
+
+		-graphical repsentation of the above groupby() function.
+		
+		-OBJECT ORIENTED API
+		-# Define mappings for labels
+		target_labels = {0: 'No Disease', 1: 'Heart Disease'}
+		sex_labels = {0: 'Female', 1: 'Male'}	
+		# Plot using mapped labels in `order` and `hue_order`
+		fig, ax = plt.subplots(figsize=(6, 4))
+		# When using map(), you don’t need to specify data=health in sns.countplot() because the columns are already transformed.
+		sns.countplot(x=health['target'].map(target_labels), hue=health['sex'].map(sex_labels), ax=ax)
+		# Add count labels
+		for container in ax.containers:
+    			ax.bar_label(container, fmt='%d', fontsize=12, fontweight='bold')
+		plt.xlabel("Target (Heart Disease Status)")
+		plt.ylabel("Count")
+		plt.title("Heart Disease Count by Sex")
+		plt.show()
+
+		-pyplot API
+		-target_label = {0 : 'No Heart Disease', 1 : 'Heart Disease'}
+		sex_label = {0 : 'Female', 1 : 'Male'}
+		# When using map(), you don’t need to specify data=health in sns.countplot() because the columns are already transformed.
+		sns.countplot(x=health['target'].map(target_label), hue = health['sex'].map(sex_label))
+		for i in plt.gca().containers:
+    			plt.gca().bar_label(i, fmt='%d', fontsize=12, fontweight='bold')
+		plt.xlabel('Target(heart disese)')
+		plt.ylabel('Count')
+		plt.title('Heart disease between male & female')
+		plt.show()
+
+
+		-Without hue if you want to add count or number above bar in the graphs.
+		-fig, ax = plt.subplots(figsize=(6, 4))
+		ax = sns.countplot(x='target', data=health)
+		# Add count labels using `bar_label`
+		ax.bar_label(ax.containers[0], fmt='%d', fontsize=12, fontweight='bold')   #one liner to add numbers above graph.
+		plt.show()
+---------------------------------------------------
+		-sns.countplot --> when need to count. Suppose yu have a attribute 'target' with two values 0 or 1. Now to count 0 and 1 we can use countplot.
+				--> we can use hue to to count in more details.
+		sns.countplot(x=health['sex'], hue= health['target'])  --> here we count sex 0 and 1 and for sex 0 how many target 0 and 1 and same for sex 1.
+		
+		-vis1= sns.distplot(df['InternetUsers']) --> suppose InternetUsers having different values 0 to 100, in that case we get distribution.
+		-vis23 = plt.hist(clean_data['Salary']) --> same like distplot, distribution of Salary.
+		-vis2 = sns.histplot(clean_data['Salary']) --> Simillar like above two but also gives count in Y axis.
+
+		-vis2= sns.displot(df['InternetUsers'],bins=20) --> same like sns.distplot but give exact value or count in Y.
+
+		-vis4 = sns.boxplot(data=df,x='IncomeGroup', y='BirthRate')  #bi variant graph. X - categorical, Y - Numerical.
+			for different income group the rate of birth will be plotted like stock market box. outliner can be detected.
+		-rating_1.boxplot(column='rating', figsize=(10,5)) --> Y axis relect the values for 1 to 5.
+
+		-vis5 = sns.lmplot(data=df,x='InternetUsers', y='BirthRate') --> Both are numerical data. relation b/w two numerical data attributes. Distribution
+
+		-rating_1.hist(column='rating', figsize=(10,5)) --> rating has five values 1,2,3,4,5. gives distribution in bar for values 0 to 1, 1 to 2, 2 to 3....
+		-plt.hist(movie[movie.Genre=='Drama'].AudienceRatings,bins=20) --> with filter distribution of a numerical attribtes.
+		-stack graph. You have rating and genre attributes. You want a stacked graph or distribution of rating for different genre.
+		plt.hist(
+    			[movie[movie.Genre==gen].AudienceRatings for gen in movie.Genre.cat.categories],
+    			bins=20,
+    			label=movie.Genre.cat.categories,
+    			alpha=1,   #make color dull or bright
+    			stacked=True)
+		plt.gcf().set_size_inches(10, 6)   --> this is how we access the figure of a pyplot API
+		# Add labels and title
+		plt.xlabel('Audience Rating')
+		plt.ylabel('Frequency')
+		plt.title('Stacked Distribution of Audience Ratings by Genre')
+		# Add legend
+		plt.legend()
+		plt.show()
+
+		-vis4 = sns.lmplot(data=clean_data,x='Exp',y='Salary') #Distribution of data points between two numerical attributes.
+		-vis5 = sns.lmplot(data=clean_data,x='Exp',y='Salary',fit_reg=False)
+		-vis6= sns.lmplot(data=movie,x='CriticsRating', y='AudienceRatings',hue='Genre',fit_reg=False)
+
+		-sns.set(style='white')   #background color.
+		plt.figure(figsize=(8,5))  #customerize fig size before each graph.
+		vis7 = sns.kdeplot(data=movie,x=movie.BudgetMillion,y=movie.AudienceRatings,fill=True,cmap='cividis',thresh=0.05)
+		-cmap : {'viridis', 'plasma', 'inferno', 'magma', 'cividis', 'coolwarm', 'twilight','twilight_shifted', 'turbo', 'Blues', 'BuGn', 'BuPu', 'GnBu', 'Greens', 'Greys',
+         		'Oranges', 'OrRd', 'PuBu', 'PuBuGn', 'PuRd', 'Purples', 'RdPu', 'Reds', 'YlGn','YlGnBu', 'YlOrBr', 'YlOrRd', 'afmhot', 'autumn', 'bone', 'cool', 'copper',
+         		'gist_earth', 'gist_gray', 'gist_heat', 'gist_ncar', 'gist_rainbow', 'gist_stern','gist_yarg', 'gnuplot', 'gnuplot2', 'gray', 'hot', 'hsv', 'jet', 'nipy_spectral',
+        		'ocean', 'pink', 'prism', 'rainbow', 'seismic', 'spring', 'summer', 'terrain','winter', 'twilight_shifted', 'cubehelix', 'flag', 'brg', 'CMRmap', 'coolwarm',
+         		'cividis', 'magma', 'inferno', 'plasma', 'viridis', 'turbo', 'twilight'}
+         
+         -Suppose you have two kind of rating and 7 types or genre of movies. You want to plot a heat map for each ratings(mean rating) for different genre.
+	# Group data by Genre and calculate mean ratings
+	audience_mean = movie.groupby('Genre')['AudienceRatings'].mean().sort_values(ascending=False).to_frame()  #.to_frame()--- series to dataframe.
+	critics_mean = movie.groupby('Genre')['CriticsRating'].mean().sort_values(ascending=False).to_frame()
+	# Define colors for the heatmap
+	colors = ['#F93822','#FDD20E']
+	# Plot two side-by-side heatmaps
+	fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(6, 5)) # the gnre names comes vertically or horizontally depends on figsize
+	# Heatmap 1: Audience Ratings by Genre
+	plt.subplot(1, 2, 1)
+	sns.heatmap(audience_mean, annot=True, cmap=colors, linewidths=0.4, linecolor='black', cbar=False, fmt='.2f')
+	plt.title('Average Audience Rating by Genre')
+	# Heatmap 2: Critics Ratings by Genre
+	plt.subplot(1, 2, 2)
+	sns.heatmap(critics_mean, annot=True, cmap=colors, linewidths=0.4, linecolor='black', cbar=False, fmt='.2f')
+	plt.title('Average Critics Rating by Genre')
+	# Adjust layout
+	fig.tight_layout(pad=2)
+	plt.show()
+
+	-Two graphs side by side. Boxplot for categorical data to numerical data or only numerical data. Object oriented API.
+	fig, ax = plt.subplots(1,2,figsize=(14,6))
+	sns.boxplot(data=movie, x='Genre',y='CriticsRating',ax = ax[0])
+	sns.boxplot(data=movie, x='Genre',y='AudienceRatings',ax = ax[1])
+	plt.show()
+
+	-violinplot same as boxplot. pyplot API
+	plt.figure(figsize=(14,6))
+	plt.subplot(1,2,1)
+	sns.violinplot(data=movie, x='Genre',y='CriticsRating')
+	plt.subplot(1,2,2)
+	sns.violinplot(data=movie, x='Genre',y='AudienceRatings')
+	plt.show()
+        
+
+	-You have three attributes. rating(numerical), Year(categorical), genre(categorical).
+	you want grpahs for each genre movies and grpah is the boxplot between rating(numerical), Year(categorical).
+
+	-pyplot API
+	-plt.figure(figsize=(20,16))
+	for i,gen in enumerate(movie.Genre.cat.categories):
+    		plt.subplot(4,2,i+1)
+    		sns.boxplot(data=movie[movie.Genre==gen],  x='Year',y='AudienceRatings')
+    		plt.title(f'Year wise Audience rating for {gen} film',fontweight='bold',fontsize=20)
+    		plt.xlabel('Year', fontweight='bold', fontsize=20, fontfamily='serif', color='black')
+    		plt.ylabel('Audience Rating', fontweight='bold', fontsize=20, fontfamily='serif', color='black')
+    		plt.xticks(fontweight='bold', fontsize=20)
+    		plt.yticks(fontweight='bold', fontsize=20)
+	plt.tight_layout()
+	plt.show()
+
+	-object oriented API
+	-fig, axes = plt.subplots(4, 2, figsize=(12, 18))  # Adjust figsize as needed
+	fig.tight_layout(pad=4.0)  # Adjust spacing between subplots
+	# Flatten the axes array for easy iteration
+	axes = axes.flatten()
+	# Iterate over genres and create a boxplot for each
+	for i, gen in enumerate(movie.Genre.cat.categories):
+    		sns.boxplot(data=movie[movie['Genre'] == gen], x='Year', y='CriticsRating', ax=axes[i])
+    		axes[i].set_title(f'Year-wise Critic Rating for {gen} Films')
+    		axes[i].set_xlabel('Year')
+    		axes[i].set_ylabel('Critic Rating')
+	# Hide any unused subplots
+	for j in range(len(genres), len(axes)):
+    	axes[j].axis('off')
+	# Display all subplots together
+	plt.show()
+
+	-FacetGrid: You have 7 genre movies and 5 years of data. Now you want to plot graphs for each genre and each year. Total graphs 35.
+	-You can plot any plot in those graphs.
+	g = sns.FacetGrid(data=movie,row='Genre',col='Year',hue='Genre', height=2, aspect=1.3)
+	g = g.map(sns.scatterplot,'CriticsRating','AudienceRatings')  #plot in each graph with map function.
+	plt.subplots_adjust(top=0.9)
+	g.fig.suptitle('Audience Ratings vs Critics Rating split by Genre and Year')
+	plt.show()
+	
+
+	-Dashboard(can plot 4 or 6 grpahs in row and cloumn manner).
+	#Dashboard
+	sns.set_style('ticks')
+	f,ax = plt.subplots(2,2,figsize=(15,15))
+	k1 = sns.kdeplot(movie,y='AudienceRatings',x='BudgetMillion',cmap='magma',ax = ax[0,0])
+	ax[0,0].set_title('Audience Ratings vs Budget in Million')
+	k1.set(xlim=(-50,250))
+	# We can further modify or add color by plotting the plot twice like k2 and k2b.
+	k2 = sns.kdeplot(movie,y='CriticsRating',x='BudgetMillion',cmap='Reds',thresh=0.05,ax = ax[0,1])
+	k2b = sns.kdeplot(movie,y='CriticsRating',x='BudgetMillion',shade = True,shade_lowest=False,cmap='Reds',\
+                  ax = ax[0,1])
+	ax[0,1].set_title('Critics Ratings vs Budget in Million')
+	k2.set(xlim=(-50,250))
+
+	k3= sns.violinplot(movie[movie.Genre == 'Thriller'], x='Year', y='AudienceRatings', ax = ax[1,0])
+	ax[1,0].set_title('Year wise Audience Ratings for Thriller')
+
+	k4 = sns.violinplot(movie[movie.Genre == 'Drama'],x='Year', y='AudienceRatings', ax = ax[1,1])
+	ax[1,1].set_title('Year wise Audience Ratings for Drama')
+	plt.show()
+
+	-'Movie rating analysis'- for more details.
+
+-streamlit app
+	-for details graphs view see
+	-C:\Users\USER\Documents\Python\Nareshit data analysis\Data analysis\MOVIE RATINGS _ ADVANCE VISUALIZATION _ EDA 1\Movie analysis with front end by streamlit
+
+	-@st.cache_data
+	def load_data():
+		movie = pd.read_csv(r'C:\Users\USER\Documents\Python\Nareshit data analysis\Data analysis\MOVIE RATINGS _ ADVANCE VISUALIZATION _ EDA 1\Movie analysis with front end by streamlit\Movie-Rating.csv')
+    		movie.columns=['Film', 'Genre', 'CriticsRating', 'AudienceRatings', 'BudgetMillion','Year']
+    		for col in movie.columns:
+        		if movie[col].dtype == 'object':
+            			movie[col] = movie[col].astype('category')
+    		movie['Year']=movie['Year'].astype('category')
+    		return movie
+
+	-movie = load_data()
+
+	-st.image("movie_logo.webp")
+	st.title("Data analysis of movies by Raja Debnath")
+	st.header("This is an EDA on the movies Dataset")
+	st.write('First few rows of the dataset: ')
+	st.dataframe(movie.head())
+
+	-#check_for_empty_cell
+	st.subheader('Missing Values')
+	missing_data = movie.isnull().sum()
+	st.write(missing_data)
+
+	-# EDA Section
+	st.subheader('Statistical Summary of the Data')
+	st.write(movie.describe().T)
+	# st.write(movie.dtypes)  # .info() is not working.
+
+	-st.info("Visualization")
+
+	-if st.checkbox('Boxplot for Genre wise Critics Rating & Audience Ratings'): #if tick the checkbox then only it appears whatever added inside if.
+
+	-st.subheader('Distribution of Critics Rating & Audience Ratings') --> before draw any graph.
+	st.pyplot(vis1.figure) --> if the graph is being drawn with an variable
+	st.pyplot(plt.gcf()) --> for pyplot API
+	st.pyplot(fig) --> Object oriented API.
+	st.pyplot(f) --> Object oriented API. same like above one.
+
+	-# Conclusion Section
+	st.subheader('Key Insights')
+	insights = """
+	- Thriller, Drama, Adventure are the top rating movies.
+	- Audiance rating are more generous than critic rating.
+	- Audiance rating & critic rating have liner relation.
+	- Movies having higher Audiance rating, are likely to be watched by audiance.
+	- Horror movies have bad impact on audiance.
+	"""
+	st.write(insights)
+
+NUMPY:
+	
